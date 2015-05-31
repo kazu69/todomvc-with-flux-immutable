@@ -14,20 +14,30 @@ var cx = require('react/lib/cx');
 
 var ReactPropTypes = React.PropTypes;
 var TodoItem = React.createClass({
-
     propTypes: {
         todo: ReactPropTypes.object.isRequired
     },
 
-    // ReactComponentが設置される前に、一度だけ実行
     getInitialState: function() {
         return {
             isEditing: false
         };
     },
 
+    shouldComponentUpdate: function(nextProp, nextState) {
+        if(nextState.isEditing) {
+            return true;
+        } else {
+            var prevProp = this.props;
+            return prevProp !== nextProp;
+        }
+    },
+
     render: function() {
-        var todo = this.props.todo;
+        var todo = this.props.todo.toJS();
+        var id = todo.id;
+        var complete = todo.complete;
+        var text = todo.text;
         var input;
 
         if (this.state.isEditing) {
@@ -35,26 +45,26 @@ var TodoItem = React.createClass({
                 <TodoTextInput
                     className="edit"
                     onSave={this._onSave}
-                    value={todo.text}
+                    value={text}
                 />;
         }
 
         return (
             <li
                 className={cx({
-                    'completed': todo.complete,
+                    'completed': complete,
                     'editing': this.state.isEditing
                 })}
-                key={todo.id}>
+                key={id}>
                 <div className="view">
                     <input
                         className="toggle"
                         type="checkbox"
-                        checked={todo.complete}
+                        checked={complete}
                         onChange={this._onToggleComplete}
                     />
                     <label onDoubleClick={this._onDoubleClick}>
-                        {todo.text}
+                        {text}
                     </label>
                     <button className="destroy" onClick={this._onDestroyClick} />
                 </div>
@@ -72,12 +82,15 @@ var TodoItem = React.createClass({
     },
 
     _onSave: function(text) {
-        TodoActions.updateText(this.props.todo.id, text);
+        var id = this.props.todo.get('id');
+        TodoActions.updateText(id, text);
         this.setState({isEditing: false});
     },
 
     _onDestroyClick: function() {
-        TodoActions.destroy(this.props.todo.id);
+        var id = this.props.todo.get('id');
+        console.log('destroy:' + id);
+        TodoActions.destroy(id);
     }
 
 });

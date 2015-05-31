@@ -23,10 +23,10 @@ var Footer = React.createClass({
         var completed = 0;
 
         if (total === 0) return null;
-
-        for (var key in allTodos) {
-            if (allTodos[key].complete) completed++;
-        }
+            for(var id in allTodos) {
+                var todo = allTodos[id];
+                if(todo.get('complete')) completed++;
+            }
 
         var itemsLeft = total - completed;
         var itemsLeftPhrase = itemsLeft === 1 ? ' item ' : ' items ';

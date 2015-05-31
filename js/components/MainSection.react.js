@@ -20,13 +20,14 @@ var MainSection = React.createClass({
 
     render: function() {
         // todoがある場合のみ表示する
-        if (Object.keys(this.props.allTodos).length < 1) return null;
+        if(Object.keys(this.props.allTodos).length < 1) return null
 
         var allTodos = this.props.allTodos;
         var todos = [];
 
-        for (var key in allTodos) {
-            todos.push(<TodoItem key={key} todo={allTodos[key]} />);
+        for(var id in allTodos) {
+            todo = allTodos[id];
+            todos.push(<TodoItem key={id} todo={todo} />);
         }
 
         return (

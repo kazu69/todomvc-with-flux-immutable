@@ -13,26 +13,31 @@ var AppDispatcher = require('../dispatcher/AppDispatcher');
 var EventEmitter = require('events').EventEmitter;
 var TodoConstants = require('../constants/TodoConstants');
 var assign = require('object-assign');
-var Immutable = require('immutable')
+var Immutable = require('immutable');
 
 var CHANGE_EVENT = 'change';
 
-var _todos = Immutable.Map();
+var _todos = {};
 
 function create(text) {
     // 36進数（0-9a-z)の36文字でID生成
     var id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
-    _todos = _todos.set(id, {
+    var data = Immutable.Map({
         id: id,
         complete: false,
         text: text
     });
+    _todos[id] = data;
+    _todos;
 }
 
 function update(id, data) {
-    _todos = _todos.update(id, function(todo) {
-        return assign({}, todo, data);
-    });
+    var todo = _todos[id];
+    if(data.text !== undefined) {
+        _todos[id] = todo.update('text', function(val) { return data.text });
+    }
+    if(data.complete) _todos[id] = todo.update('complete', function(val) { return data.complete });
+    _todos;
 }
 
 // Update all of the TODO items with the same object.
@@ -43,14 +48,17 @@ function updateAll(data) {
 }
 
 function destroy(id) {
-    _todos = _todos.delete(id)
+    delete _todos[id]
+    return _todos;
 }
 
 // Delete all the completed TODO items.
 function destroyCompleted() {
-    _todos = _todos.filter(function(todo, id, todos) {
-        if(todo.complete == false) return todo;
-    });
+    for(var id in _todos) {
+        var todo = _todos[id];
+        if(todo.get('complete')) delete _todos[id];
+    }
+    return _todos;
 }
 
 // EventEmitterの拡張
@@ -58,14 +66,14 @@ var TodoStore = assign({}, EventEmitter.prototype, {
 
     // all the remaining TODO items are marked as completed.
     areAllComplete: function() {
-        var uncomplete = _todos.filter(function(todo, id, todos) {
-            if(todo.complete === false) return todo;
-        });
-        return (uncomplete.size > 0)? false : true;
+        for(var id in _todos) {
+            if(_todos[id].get('complete') === false) return false;
+        };
+        return true;
     },
 
     getAll: function() {
-        return _todos.toObject();
+        return _todos;
     },
 
     // リスナー登録
